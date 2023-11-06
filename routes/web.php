@@ -23,6 +23,7 @@ Route::group(['prefix' => 'cetak'], function () {
 });
 Route::group(['prefix' => 'downloads'], function () {
     Route::get('/template-excel/{sekolah_id}', [DownloadController::class, 'template_excel']);
+    Route::get('/nilai/{ujian_id}', [DownloadController::class, 'nilai_ujian']);
 });
 //Route::get('/auth/sso', [AuthController::class, 'sso']);
 Route::get('/{any}', [ApplicationController::class, 'index'])->where('any', '.*');

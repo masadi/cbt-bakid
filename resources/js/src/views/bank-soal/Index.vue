@@ -5,13 +5,14 @@
         <h2>Data Ujian</h2>
       </b-card-title>
       <div class="heading-elements">
-        <b-button variant="primary" size="sm" v-b-modal.upload-soal>Tambah Data</b-button>
+        <!--b-button variant="primary" size="sm" v-b-modal.upload-soal>Tambah Data</b-button-->
+        <b-button variant="primary" size="sm" @click="tambahData">Tambah Data</b-button>
       </div>
     </b-card-header>
     <b-card-body>
-      <datatable :isBusy="isBusy" :items="items" :fields="fields" :meta="meta" @per_page="handlePerPage" @pagination="handlePagination" @search="handleSearch" @sort="handleSort" @filter_rombel="handleRombel" @filter_mapel="handleMapel" />
+      <datatable :isBusy="isBusy" :items="items" :fields="fields" :meta="meta" @per_page="handlePerPage" @pagination="handlePagination" @search="handleSearch" @sort="handleSort" @filter_rombel="handleRombel" @filter_mapel="handleMapel" @edit="handleEdit" />
     </b-card-body>
-    <b-modal id="upload-soal" title="Unggah Soal">
+    <!--b-modal id="upload-soal" title="Unggah Soal">
       <template #modal-footer="{ ok, cancel }">
         <b-button variant="danger" @click="cancel()" v-if="!loading">
           Tutup
@@ -36,13 +37,18 @@
           <p v-show="feedback_file" v-html="feedback_file" class="text-danger"></p>
         </b-form-group>
       </form>
-    </b-modal>
+    </b-modal-->
+    <add-modal @reload="handleReload"></add-modal>
+    <edit-modal @reload="handleReload"></edit-modal>
   </b-card>
 </template>
 
 <script>
 import { BCard, BCardHeader, BCardTitle, BCardBody, BButton, BFormFile, BSpinner, BFormGroup, BFormSelect, BFormInput } from 'bootstrap-vue'
 import Datatable from './Datatable.vue' //IMPORT COMPONENT DATATABLENYA
+import EditModal from './EditModal.vue'
+import AddModal from './AddModal.vue'
+import eventBus from '@core/utils/eventBus'
 export default {
   components: {
     BCard,
@@ -55,7 +61,9 @@ export default {
     BFormGroup, 
     BFormSelect,
     BFormInput,
-    Datatable
+    Datatable,
+    EditModal,
+    AddModal,
   },
   data() {
     return {
@@ -92,6 +100,13 @@ export default {
           tdClass: 'text-center'
         },
         {
+          key: 'status',
+          label: 'status',
+          sortable: true,
+          thClass: 'text-center',
+          tdClass: 'text-center'
+        },
+        {
           key: 'actions',
           label: 'Aksi',
           sortable: false,
@@ -114,6 +129,9 @@ export default {
     this.loadPostsData()
   },
   methods: {
+    handleReload(){
+      this.loadPostsData()
+    },
     loadPostsData() {
       this.isBusy = true
       //let current_page = this.search == '' ? this.current_page : this.current_page != 1 ? 1 : this.current_page
@@ -143,6 +161,7 @@ export default {
             text: item.nama_mata_pelajaran+' ('+item.rombongan_belajar.nama+')'
           })
         })
+        console.log(set_option);
         this.options = set_option
         this.meta = {
           total: getData.total,
@@ -238,6 +257,12 @@ export default {
       this.mapel_id = val //SET CURRENT PAGE YANG AKTIF
       this.loadPostsData()
     },
+    handleEdit(item){
+      eventBus.$emit('open-modal', item);
+    },
+    tambahData(){
+      eventBus.$emit('open-add-modal', this.options);
+    }
   },
 }
 </script>

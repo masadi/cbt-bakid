@@ -30,6 +30,10 @@ class Peserta_didik extends Model
             'user_id' // Local key on the environments table...
         );
     }
+    public function anggota_rombel()
+    {
+        return $this->hasOne(Anggota_rombel::class, 'peserta_didik_id', 'peserta_didik_id');
+    }
     public function kelas(){
 		return $this->hasOneThrough(
             Rombongan_belajar::class,

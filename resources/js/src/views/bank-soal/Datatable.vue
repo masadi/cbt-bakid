@@ -46,9 +46,16 @@
       <template v-slot:cell(kelas)="row">
         {{row.item.pembelajaran.rombongan_belajar.nama}}
       </template>
+      <template v-slot:cell(status)="row">
+        <b-badge variant="success" v-if="row.item.status">AKTIF</b-badge>
+        <b-badge variant="danger" v-else>TIDAK AKTIF</b-badge>
+      </template>
       <template v-slot:cell(actions)="row">
-        <b-dropdown id="dropdown-dropleft" dropleft text="Aksi" variant="success" size="sm">
+        <b-dropdown id="dropdown-dropleft" dropleft text="Aksi" variant="success" size="sm" boundary="window">
+          <b-dropdown-item href="javascript:" @click="edit(row.item)"><font-awesome-icon icon="fa-solid fa-pen-to-square" /> Edit</b-dropdown-item>
           <b-dropdown-item href="javascript:" @click="soal(row.item)"><font-awesome-icon icon="fa-solid fa-eye" /> Validasi Soal</b-dropdown-item>
+          <b-dropdown-item href="javascript:" @click="hapus(row.item)"><font-awesome-icon icon="fa-solid fa-trash" /> Hapus</b-dropdown-item>
+          <b-dropdown-item href="javascript:" @click="nilai(row.item)"><font-awesome-icon icon="fa-solid fa-download" /> Download Nilai</b-dropdown-item>
         </b-dropdown>
       </template>
     </b-table>
@@ -62,40 +69,12 @@
         <b-pagination v-model="meta.current_page" :total-rows="meta.total" :per-page="meta.per_page" align="right" @change="changePage" aria-controls="dw-datatable"></b-pagination>
       </b-col>
     </b-row>
-    <b-modal ref="my-modal" size="xl" :title="judul" ok-title="Simpan" cancel-title="Tutup" @ok="handleOk">
-      <form ref="form" @submit.stop.prevent="handleSubmit">
-        <table class="table table-bordered">
-          <thead>
-            <th class="text-center">NO</th>
-            <th class="text-center">Mata Pelajaran</th>
-            <th class="text-center">Guru</th>
-            <th class="text-center">Hapus</th>
-          </thead>
-          <tbody>
-            <tr v-for="(mapel, index) in pembelajaran" v-if="pembelajaran.length">
-              <td>{{index + 1}}</td>
-              <td>{{mapel.nama_mata_pelajaran}}</td>
-              <td>
-                <input type="hidden" v-model="form.pembelajaran_id[mapel.pembelajaran_id]" />
-                <b-form-select v-model="form.guru_id[mapel.pembelajaran_id]" :options="data_guru" value-field="guru_id" text-field="nama"></b-form-select>
-              </td>
-              <td>
-                <b-button variant="danger" size="sm" @click="hapus(mapel.pembelajaran_id, mapel.rombongan_belajar_id)">Hapus</b-button>
-              </td>
-            </tr>
-            <tr v-else>
-              <td class="text-center" colspan="4">Tidak ada data untuk ditampilkan</td>
-            </tr>
-          </tbody>
-        </table>
-      </form>
-    </b-modal>
   </div>
 </template>
 
 <script>
 import _ from 'lodash' //IMPORT LODASH, DIMANA AKAN DIGUNAKAN UNTUK MEMBUAT DELAY KETIKA KOLOM PENCARIAN DIISI
-import { BRow, BCol, BTable, BSpinner, BPagination, BDropdown, BDropdownItem, BAlert, BButton, BFormSelect, BFormGroup } from 'bootstrap-vue'
+import { BRow, BCol, BTable, BSpinner, BPagination, BDropdown, BDropdownItem, BAlert, BButton, BFormSelect, BFormGroup, BBadge } from 'bootstrap-vue'
 export default {
   components: {
     BRow,
@@ -108,7 +87,8 @@ export default {
     BAlert,
     BButton,
     BFormSelect,
-    BFormGroup
+    BFormGroup,
+    BBadge
   },
   props: {
     items: {
@@ -160,32 +140,17 @@ export default {
     soal(item){
       this.$router.replace({ name: "edit-soal", params: {ujian_id:item.ujian_id}, query: {nomor: 1} })
     },
-    handleOk(bvModalEvent){
-      bvModalEvent.preventDefault()
-      this.handleSubmit()
+    nilai(item){
+      window.open(`/downloads/nilai/${item.ujian_id}`, 'blank')
+      //this.$router.replace({ name: "edit-soal", params: {ujian_id:item.ujian_id}, query: {nomor: 1} })
     },
-    handleSubmit(){
-      console.log('handleSubmit');
-      this.$http.post('/rombongan-belajar/simpan-pembelajaran', {
-        form: this.form
-      }).then(response => {
-        let data = response.data
-        this.$swal({
-          icon: data.icon,
-          title: data.title,
-          text: data.text,
-          customClass: {
-            confirmButton: 'btn btn-success',
-          },
-        }).then(result => {
-          this.$refs['my-modal'].hide()
-        })
-      })
+    edit(item){
+      this.$emit('edit', item)
     },
-    hapus(pembelajaran_id, rombongan_belajar_id){
+    hapus(item){
       this.$swal({
         title: 'Apakah Anda yakin?',
-        text: "Aksi ini akan menggenerate pengguna Satuan Pendidikan!",
+        text: "Aksi ini tidak dapat dikembalikan!",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Yakin!',
@@ -196,9 +161,8 @@ export default {
         buttonsStyling: false,
       }).then(result => {
         if (result.value) {
-          this.$http.post('/rombongan-belajar/hapus-pembelajaran', {
-            pembelajaran_id: pembelajaran_id,
-            rombongan_belajar_id: rombongan_belajar_id,
+          this.$http.post('/bank-soal/hapus', {
+            ujian_id: item.ujian_id
           }).then(response => {
             let data = response.data
             this.$swal({
@@ -209,39 +173,7 @@ export default {
                 confirmButton: 'btn btn-success',
               },
             }).then(result => {
-              this.pembelajaran = data.pembelajaran
-            })
-          });
-        }
-      })
-    },
-    walas(item){
-      this.$swal({
-        title: 'Apakah Anda yakin?',
-        text: "Aksi ini akan menggenerate pengguna Satuan Pendidikan!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yakin!',
-        customClass: {
-          confirmButton: 'btn btn-primary',
-          cancelButton: 'btn btn-outline-danger ml-1',
-        },
-        buttonsStyling: false,
-      }).then(result => {
-        if (result.value) {
-          this.$http.post('/referensi/generate-pengguna', {
-            sekolah_id: item.sekolah_id
-          }).then(response => {
-            let data = response.data
-            this.$swal({
-              icon: data.icon,
-              title: data.title,
-              text: data.text,
-              customClass: {
-                confirmButton: 'btn btn-success',
-              },
-            }).then(result => {
-              this.loadPerPage(10);
+              this.$emit('per_page', this.meta.per_page)
             })
           });
         }

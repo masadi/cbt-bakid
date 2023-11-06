@@ -48,6 +48,8 @@ import {
     faTrashCan,
     faUserTie,
     faList,
+    faDownload,
+    faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 library.add(
     faHouse, 
@@ -91,4 +93,6 @@ library.add(
     faTrashCan,
     faUserTie,
     faList,
+    faDownload,
+    faTrash,
 )

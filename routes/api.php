@@ -76,5 +76,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/soal', [SoalController::class, 'soal']);
     Route::post('/simpan', [SoalController::class, 'simpan']);
     Route::post('/upload', [SoalController::class, 'upload']);
+    Route::post('/update', [SoalController::class, 'update']);
+    Route::post('/hapus', [SoalController::class, 'hapus']);
   });
 });

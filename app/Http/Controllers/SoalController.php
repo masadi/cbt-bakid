@@ -66,12 +66,84 @@ class SoalController extends Controller
         $data = ['data' => request()->all()];
         return response()->json($data);
     }
+    public function update(){
+        $validator = Validator::make(request()->all(), 
+            [
+                'nama' => ['required'],
+                'status' => ['required'],
+            ],
+            [
+                'nama.required' => 'Nama Mata Ujian tidak boleh kosong',
+                'status.required' => 'Status Ujian tidak boleh kosong',
+            ]
+        );
+        if ($validator->fails()) {
+            return response()->json([
+                'data' => NULL,
+                'success' => FALSE,
+                'errors' => $validator->errors(),
+            ]);
+        }
+        $find = Ujian::find(request()->ujian_id);
+        $find->nama = request()->nama;
+        $find->status = request()->status;
+        if($find->save()){
+            $data = [
+                'success' => TRUE,
+                'errors' => NULL,
+                'icon' => 'success',
+                'text' => 'Mata Ujian berhasil diperbaharui',
+                'title' => 'Berhasil',
+            ];
+        } else {
+            $data = [
+                'success' => TRUE,
+                'errors' => NULL,
+                'icon' => 'error',
+                'text' => 'Mata Ujian gagal diperbaharui. Silahkan coba beberapa saat lagi!',
+                'title' => 'Gagal',
+            ];
+        }
+        return response()->json($data);
+    }
+    public function hapus(){
+        $find = Ujian::find(request()->ujian_id);
+        if($find){
+            if($find->delete()){
+                $data = [
+                    'success' => TRUE,
+                    'errors' => NULL,
+                    'icon' => 'success',
+                    'text' => 'Mata Ujian berhasil dihapus',
+                    'title' => 'Berhasil',
+                ];
+            } else {
+                $data = [
+                    'success' => TRUE,
+                    'errors' => NULL,
+                    'icon' => 'error',
+                    'text' => 'Mata Ujian gagal dihapus. Silahkan coba beberapa saat lagi!',
+                    'title' => 'Gagal',
+                ];
+            }
+        } else {
+            $data = [
+                'success' => TRUE,
+                'errors' => NULL,
+                'icon' => 'error',
+                'text' => 'Mata Ujian tidak ditemukan. Silahkan coba beberapa saat lagi!',
+                'title' => 'Gagal',
+            ];
+        }
+        return response()->json($data);
+    }
     public function upload(){
         $validator = Validator::make(request()->all(), 
             [
                 'nama' => ['required'],
                 'pembelajaran_id' => ['required'],
                 'file_zip' => ['required', 'file', 'mimes:zip'],
+                'status' => ['required'],
             ],
             [
                 'nama.required' => 'Nama Mata Ujian tidak boleh kosong',
@@ -79,6 +151,7 @@ class SoalController extends Controller
                 'file_zip.required' => 'Berkas ZIP tidak boleh kosong',
                 'file_zip.file' => 'Berkas ZIP tidak boleh kosong',
                 'file_zip.mimes' => 'Berkas ZIP harus berekstensi .ZIP',
+                'status.required' => 'Status Ujian tidak boleh kosong',
             ]
         );
         if ($validator->fails()) {
@@ -117,12 +190,10 @@ class SoalController extends Controller
                 }
                 //$file->getFileName();
             }
-            $ujian = Ujian::updateOrCreate(
+            $ujian = Ujian::create(
                 [
                     'pembelajaran_id' => request()->pembelajaran_id,
-                    'status' => 1,
-                ],
-                [
+                    'status' => request()->status,
                     'nama' => request()->nama,
                 ]
             );
